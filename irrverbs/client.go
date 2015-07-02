@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/rockneurotiko/go-tgbot"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -21,6 +23,18 @@ func main() {
 	if os.Args[1] == "learn" {
 		learn()
 	}
+
+	cfg, _ := getConfig()
+	bot := tgbot.NewTgBot(cfg.Telegram.Token)
+	bot.CommandFn(`echo (.+)`, echoHandler)
+	bot.SimpleStart()
+
+}
+
+func echoHandler(bot tgbot.TgBot, msg tgbot.Message, vals []string, kvals map[string]string) *string {
+	fmt.Println(vals, kvals)
+	newmsg := fmt.Sprintf("[Echoed]: %s", vals[1])
+	return &newmsg
 }
 
 func checkArgs() bool {
