@@ -1,6 +1,6 @@
 package main
 
-import "code.google.com/p/gcfg"
+import "gopkg.in/gcfg.v1"
 
 // Config is config
 type Config struct {
@@ -12,6 +12,6 @@ type Config struct {
 
 func getConfig() (Config, error) {
 	var cfg Config
-	err := gcfg.ReadFileInto(&cfg, "./config.cfg")
+	err := gcfg.ReadFileInto(&cfg, "/tmp/config.cfg")
 	return cfg, err
 }
