@@ -51,16 +51,7 @@ func checkArgs() bool {
 }
 
 func getAllVerbs() map[string][]string {
-	var verbs map[string][]string
-	verbs = make(map[string][]string)
-	rows, _ :=
-		globalDb.Query("SELECT v1, v2, v3 FROM english_irregular_verbs")
-	for rows.Next() {
-		var v1, v2, v3 string
-		rows.Scan(&v1, &v2, &v3)
-		verbs[v1] = []string{v2, v3}
-	}
-	return verbs
+	return GetEnglishVerbs();
 }
 
 func learn() {

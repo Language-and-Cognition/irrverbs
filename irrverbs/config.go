@@ -12,6 +12,6 @@ type Config struct {
 
 func getConfig() (Config, error) {
 	var cfg Config
-	err := gcfg.ReadFileInto(&cfg, "/tmp/config.cfg")
+	err := gcfg.ReadFileInto(&cfg, "./config.cfg")
 	return cfg, err
 }
