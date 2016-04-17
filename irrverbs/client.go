@@ -1,34 +1,67 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
-	"os"
+	"sync"
 
 	"github.com/rockneurotiko/go-tgbot"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
-var globalDb *sql.DB
+type usersAnsweringStruct struct {
+	*sync.RWMutex
+	Users map[int]string
+}
+
+var usersAnswering = usersAnsweringStruct{&sync.RWMutex{}, make(map[int]string)}
+
+func (users *usersAnsweringStruct) get(user int) (string, bool) {
+	users.RLock()
+	s, ok := users.Users[user]
+	users.RUnlock()
+	return s, ok
+}
+
+func (users *usersAnsweringStruct) set(user int, value string) {
+	users.Lock()
+	users.Users[user] = value
+	users.Unlock()
+}
+
+func (users *usersAnsweringStruct) del(user int) {
+	users.Lock()
+	delete(users.Users, user)
+	users.Unlock()
+}
 
 func main() {
-	if !checkArgs() {
-		usage()
-		os.Exit(1)
-	}
-	globalDb, _ = sql.Open("sqlite3", "./verbs.db")
-	defer globalDb.Close()
-
-	if os.Args[1] == "learn" {
-		learn()
-	}
-
 	cfg, _ := getConfig()
 	bot := tgbot.NewTgBot(cfg.Telegram.Token)
 	bot.CommandFn(`echo (.+)`, echoHandler)
+	bot.SimpleCommandFn(`learninig`, learnHandler)
+	bot.NotCalledFn(answerHandler)
 	bot.SimpleStart()
+}
 
+func learnHandler(bot tgbot.TgBot, msg tgbot.Message, text string) *string {
+	key := "understand" // TODO: must be random
+	usersAnswering.set(msg.Chat.ID, key)
+	bot.Answer(msg).Text(key).ReplyToMessage(msg.ID).End()
+	return nil
+}
+
+func answerHandler(bot tgbot.TgBot, msg tgbot.Message) {
+	if msg.Text == nil {
+		return
+	}
+	s, ok := usersAnswering.get(msg.Chat.ID)
+	usersAnswering.del(msg.Chat.ID)
+	if !ok {
+		bot.Answer(msg).Text("You need to start /learninig first").End()
+		return
+	}
+	verbs := getAllVerbs()
+	// TODO: Check answer
+	bot.Answer(msg).Text(fmt.Sprintf("%s %s", verbs[s][0], verbs[s][1])).End()
 }
 
 func echoHandler(bot tgbot.TgBot, msg tgbot.Message, vals []string, kvals map[string]string) *string {
@@ -37,32 +70,6 @@ func echoHandler(bot tgbot.TgBot, msg tgbot.Message, vals []string, kvals map[st
 	return &newmsg
 }
 
-func checkArgs() bool {
-	if len(os.Args) < 2 {
-		return false
-	} else if os.Args[1] != "add" && os.Args[1] != "learn" {
-		return false
-	} else if os.Args[1] == "add" && len(os.Args) != 5 {
-		return false
-	} else if os.Args[1] == "learn" && len(os.Args) != 2 {
-		return false
-	}
-	return true
-}
-
 func getAllVerbs() map[string][]string {
-	return GetEnglishVerbs();
-}
-
-func learn() {
-	verbs := getAllVerbs()
-	for key, value := range verbs {
-		fmt.Println(key, value)
-	}
-}
-
-func usage() {
-	fmt.Println("Usage:")
-	fmt.Printf("\t%s add v1 v2 v3\n", os.Args[0])
-	fmt.Printf("\t%s learn\n", os.Args[0])
+	return GetEnglishVerbs()
 }
