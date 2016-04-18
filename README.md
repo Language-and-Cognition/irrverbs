@@ -1,2 +1,2 @@
 # irrverbs
-Telegram bot that can help you learn irregular verb
+Telegram bot that can help you learn irregular verbs
