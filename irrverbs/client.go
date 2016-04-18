@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/rockneurotiko/go-tgbot"
@@ -37,15 +38,22 @@ func main() {
 	cfg, _ := getConfig()
 	bot := tgbot.NewTgBot(cfg.Telegram.Token)
 	bot.CommandFn(`echo (.+)`, echoHandler)
-	bot.SimpleCommandFn(`learninig`, learnHandler)
+	bot.SimpleCommandFn(`learninig`, startLearningHandler)
 	bot.NotCalledFn(answerHandler)
 	bot.SimpleStart()
 }
 
-func learnHandler(bot tgbot.TgBot, msg tgbot.Message, text string) *string {
-	key := "understand" // TODO: must be random
-	usersAnswering.set(msg.Chat.ID, key)
-	bot.Answer(msg).Text(key).ReplyToMessage(msg.ID).End()
+func getRandomVerb() string {
+	for key := range getAllVerbs() {
+		return key
+	}
+	return "cut"
+}
+
+func startLearningHandler(bot tgbot.TgBot, msg tgbot.Message, text string) *string {
+	verb := getRandomVerb()
+	usersAnswering.set(msg.Chat.ID, verb)
+	bot.Answer(msg).Text(verb).End()
 	return nil
 }
 
@@ -54,14 +62,28 @@ func answerHandler(bot tgbot.TgBot, msg tgbot.Message) {
 		return
 	}
 	s, ok := usersAnswering.get(msg.Chat.ID)
-	usersAnswering.del(msg.Chat.ID)
+	if *msg.Text == "/stop" {
+		usersAnswering.del(msg.Chat.ID)
+		return
+	}
 	if !ok {
 		bot.Answer(msg).Text("You need to start /learninig first").End()
 		return
 	}
 	verbs := getAllVerbs()
-	// TODO: Check answer
-	bot.Answer(msg).Text(fmt.Sprintf("%s %s", verbs[s][0], verbs[s][1])).End()
+	userVerbs := strings.Split(*msg.Text, " ")
+	if len(userVerbs) != 2 {
+		bot.Answer(msg).Text("Answer should be two verbs separated by space").End()
+	}
+	v2, v3 := verbs[s][0], verbs[s][1]
+	if strings.ToLower(userVerbs[0]) == v2 && strings.ToLower(userVerbs[1]) == v3 {
+		bot.Answer(msg).Text("Correct!").End()
+	} else {
+		bot.Answer(msg).Text(fmt.Sprintf("Incorrect. The right answer is %s %s", v2, v3)).End()
+	}
+	verb := getRandomVerb()
+	usersAnswering.set(msg.Chat.ID, verb)
+	bot.Answer(msg).Text(verb).End()
 }
 
 func echoHandler(bot tgbot.TgBot, msg tgbot.Message, vals []string, kvals map[string]string) *string {
