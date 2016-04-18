@@ -38,7 +38,7 @@ func main() {
 	cfg, _ := getConfig()
 	bot := tgbot.NewTgBot(cfg.Telegram.Token)
 	bot.CommandFn(`echo (.+)`, echoHandler)
-	bot.SimpleCommandFn(`learninig`, startLearningHandler)
+	bot.SimpleCommandFn(`learning`, startLearningHandler)
 	bot.NotCalledFn(answerHandler)
 	bot.SimpleStart()
 }
@@ -67,7 +67,7 @@ func answerHandler(bot tgbot.TgBot, msg tgbot.Message) {
 		return
 	}
 	if !ok {
-		bot.Answer(msg).Text("You need to start /learninig first").End()
+		bot.Answer(msg).Text("You need to start /learning first").End()
 		return
 	}
 	verbs := getAllVerbs()
