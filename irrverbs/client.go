@@ -74,6 +74,7 @@ func answerHandler(bot tgbot.TgBot, msg tgbot.Message) {
 	userVerbs := strings.Split(*msg.Text, " ")
 	if len(userVerbs) != 2 {
 		bot.Answer(msg).Text("Answer should be two verbs separated by space").End()
+		return
 	}
 	v2, v3 := verbs[s][0], verbs[s][1]
 	if strings.ToLower(userVerbs[0]) == v2 && strings.ToLower(userVerbs[1]) == v3 {
