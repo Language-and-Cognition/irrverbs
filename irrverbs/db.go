@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func isUserExists(db *sql.DB, id int) bool {
+func doesUserExist(db *sql.DB, id int) bool {
 	var temp int
 	err := db.QueryRow("SELECT id FROM overall WHERE id = ?", id).Scan(&temp)
 	if err == sql.ErrNoRows {
@@ -47,7 +47,7 @@ func getOverallStatistics(db *sql.DB, id int) (int, int) {
 func getLastStatistics(db *sql.DB, id int) (int, int, time.Time) {
 	var right, wrong int
 	var since time.Time
-	db.QueryRow("SELECT right, wrong, since", &right, &wrong, &since)
+	db.QueryRow("SELECT right, wrong, since FROM last WHERE id = ?", id).Scan(&right, &wrong, &since)
 	return right, wrong, since
 }
 
