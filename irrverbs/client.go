@@ -1,12 +1,16 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"strings"
 	"sync"
 
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/rockneurotiko/go-tgbot"
 )
+
+var globalDb *sql.DB
 
 type usersAnsweringStruct struct {
 	*sync.RWMutex
@@ -36,6 +40,10 @@ func (users *usersAnsweringStruct) del(user int) {
 
 func main() {
 	cfg, _ := getConfig()
+
+	globalDb, _ = sql.Open("sqlite3", "./statistics.db")
+	defer globalDb.Close()
+
 	bot := tgbot.NewTgBot(cfg.Telegram.Token)
 	bot.CommandFn(`echo (.+)`, echoHandler)
 	bot.SimpleCommandFn(`learning`, startLearningHandler)
