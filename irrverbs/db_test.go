@@ -64,3 +64,53 @@ func TestAddAnswers(t *testing.T) {
 		t.Log(right, " != ", 4)
 	}
 }
+
+func TestClearStatistics(t *testing.T) {
+	db := pretestInit()
+	defer db.Close()
+
+	addRightAnswer(db, 1)
+	addRightAnswer(db, 1)
+	addRightAnswer(db, 1)
+	addWrongAnswer(db, 1)
+	addWrongAnswer(db, 1)
+	addWrongAnswer(db, 1)
+	addWrongAnswer(db, 1)
+
+	clearLastStatistics(db, 1)
+
+	right, wrong, _ := getLastStatistics(db, 1)
+	if right != 0 || wrong != 0 {
+		t.Error("Last statistics has not been cleared")
+	}
+
+	rightOverall, wrongOverall := getOverallStatistics(db, 1)
+	if rightOverall != 3 || wrongOverall != 4 {
+		t.Error("Overall statistics has been cleared")
+	}
+}
+
+func TestNukeStatistics(t *testing.T) {
+	db := pretestInit()
+	defer db.Close()
+
+	addRightAnswer(db, 1)
+	addRightAnswer(db, 1)
+	addRightAnswer(db, 1)
+	addWrongAnswer(db, 1)
+	addWrongAnswer(db, 1)
+	addWrongAnswer(db, 1)
+	addWrongAnswer(db, 1)
+
+	nukeAllStatistics(db, 1)
+
+	right, wrong, _ := getLastStatistics(db, 1)
+	if right != 0 || wrong != 0 {
+		t.Error("Last statistics has not been cleared")
+	}
+
+	rightOverall, wrongOverall := getOverallStatistics(db, 1)
+	if rightOverall != 0 || wrongOverall != 0 {
+		t.Error("Overall statistics has been cleared")
+	}
+}

@@ -19,12 +19,12 @@ func createUser(db *sql.DB, id int) {
 	db.Exec("INSERT INTO last (id, right, wrong, since) VALUES (?, 0, 0, date('now'))", id)
 }
 
-func removeLastStatistics(db *sql.DB, id int) {
+func clearLastStatistics(db *sql.DB, id int) {
 	db.Exec("UPDATE last SET right = 0, wrong = 0, since = datetime('now') WHERE id = ?", id)
 }
 
 func nukeAllStatistics(db *sql.DB, id int) {
-	removeLastStatistics(db, id)
+	clearLastStatistics(db, id)
 	db.Exec("UPDATE overall SET right = 0, wrong = 0 WHERE id = ?", id)
 }
 
