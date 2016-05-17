@@ -52,6 +52,6 @@ func getLastStatistics(db *sql.DB, id int) (int, int, time.Time) {
 }
 
 func initIfNotExists(db *sql.DB) {
-	db.Exec("CREATE TABLE overall (id INTEGER CONSTRAINT id PRIMARY KEY, right INTEGER, wrong INTEGER)")
-	db.Exec("CREATE TABLE last (id INTEGER CONSTRAINT id PRIMARY KEY, right INTEGER, wrong INTEGER, since TEXT)")
+	db.Exec("CREATE TABLE IF NOT EXISTS overall (id INTEGER CONSTRAINT id PRIMARY KEY, right INTEGER, wrong INTEGER)")
+	db.Exec("CREATE TABLE IF NOT EXISTS last (id INTEGER CONSTRAINT id PRIMARY KEY, right INTEGER, wrong INTEGER, since TEXT)")
 }

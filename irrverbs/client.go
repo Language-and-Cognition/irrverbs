@@ -44,9 +44,11 @@ func main() {
 	globalDb, _ = sql.Open("sqlite3", "./statistics.db")
 	defer globalDb.Close()
 
+	initIfNotExists(globalDb)
+
 	bot := tgbot.NewTgBot(cfg.Telegram.Token)
-	bot.CommandFn(`echo (.+)`, echoHandler)
 	bot.SimpleCommandFn(`learning`, startLearningHandler)
+	bot.SimpleCommandFn(`statistics`, statisticsHandler)
 	bot.NotCalledFn(answerHandler)
 	bot.SimpleStart()
 }
@@ -59,9 +61,26 @@ func getRandomVerb() string {
 }
 
 func startLearningHandler(bot tgbot.TgBot, msg tgbot.Message, text string) *string {
+	if !doesUserExist(globalDb, msg.Chat.ID) {
+		createUser(globalDb, msg.Chat.ID)
+	}
 	verb := getRandomVerb()
 	usersAnswering.set(msg.Chat.ID, verb)
 	bot.Answer(msg).Text(verb).End()
+	return nil
+}
+
+func statisticsHandler(bot tgbot.TgBot, msg tgbot.Message, text string) *string {
+	if !doesUserExist(globalDb, msg.Chat.ID) {
+		createUser(globalDb, msg.Chat.ID)
+	}
+	right, wrong, since := getLastStatistics(globalDb, msg.Chat.ID)
+	rightOverall, wrongOverall := getOverallStatistics(globalDb, msg.Chat.ID)
+	format := "Last statistics since %s:\nRight: %d\nWrong: %d\nRatio: %f\nOverall:\nRight: %d\nWrong: %d\nRatio: %f"
+	ratio := float64(right) / float64(right+wrong)
+	ratioOverall := float64(rightOverall) / float64(rightOverall+wrongOverall)
+	answer := fmt.Sprintf(format, since, right, wrong, ratio, rightOverall, wrongOverall, ratioOverall)
+	bot.Answer(msg).Text(answer).End()
 	return nil
 }
 
@@ -86,19 +105,15 @@ func answerHandler(bot tgbot.TgBot, msg tgbot.Message) {
 	}
 	v2, v3 := verbs[s][0], verbs[s][1]
 	if strings.ToLower(userVerbs[0]) == v2 && strings.ToLower(userVerbs[1]) == v3 {
+		addRightAnswer(globalDb, msg.Chat.ID)
 		bot.Answer(msg).Text("Correct!").End()
 	} else {
+		addWrongAnswer(globalDb, msg.Chat.ID)
 		bot.Answer(msg).Text(fmt.Sprintf("Incorrect. The right answer is %s %s", v2, v3)).End()
 	}
 	verb := getRandomVerb()
 	usersAnswering.set(msg.Chat.ID, verb)
 	bot.Answer(msg).Text(verb).End()
-}
-
-func echoHandler(bot tgbot.TgBot, msg tgbot.Message, vals []string, kvals map[string]string) *string {
-	fmt.Println(vals, kvals)
-	newmsg := fmt.Sprintf("[Echoed]: %s", vals[1])
-	return &newmsg
 }
 
 func getAllVerbs() map[string][]string {
