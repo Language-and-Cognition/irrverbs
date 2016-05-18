@@ -15,12 +15,14 @@ func doesUserExist(db *sql.DB, id int) bool {
 }
 
 func createUser(db *sql.DB, id int) {
+	now := time.Now().UTC()
 	db.Exec("INSERT INTO overall (id, right, wrong) VALUES (?, 0, 0)", id)
-	db.Exec("INSERT INTO last (id, right, wrong, since) VALUES (?, 0, 0, date('now'))", id)
+	db.Exec("INSERT INTO last (id, right, wrong, since) VALUES (?, 0, 0, ?)", id, now.Format(time.RFC822))
 }
 
 func clearLastStatistics(db *sql.DB, id int) {
-	db.Exec("UPDATE last SET right = 0, wrong = 0, since = datetime('now') WHERE id = ?", id)
+	now := time.Now().UTC()
+	db.Exec("UPDATE last SET right = 0, wrong = 0, since = ? WHERE id = ?", now.Format(time.RFC822), id)
 }
 
 func nukeAllStatistics(db *sql.DB, id int) {
@@ -44,9 +46,9 @@ func getOverallStatistics(db *sql.DB, id int) (int, int) {
 	return right, wrong
 }
 
-func getLastStatistics(db *sql.DB, id int) (int, int, time.Time) {
+func getLastStatistics(db *sql.DB, id int) (int, int, string) {
 	var right, wrong int
-	var since time.Time
+	var since string
 	db.QueryRow("SELECT right, wrong, since FROM last WHERE id = ?", id).Scan(&right, &wrong, &since)
 	return right, wrong, since
 }
