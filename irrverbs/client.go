@@ -49,6 +49,9 @@ func main() {
 	bot := tgbot.NewTgBot(cfg.Telegram.Token)
 	bot.SimpleCommandFn(`learning`, startLearningHandler)
 	bot.SimpleCommandFn(`statistics`, statisticsHandler)
+	bot.SimpleCommandFn(`help`, helpHandler)
+	bot.SimpleCommandFn(`clear_last_statistics`, clearStatisticsHandler)
+	bot.SimpleCommandFn(`nuke_all_statistics`, nukeStatisticsHandler)
 	bot.NotCalledFn(answerHandler)
 	bot.SimpleStart()
 }
@@ -58,6 +61,16 @@ func getRandomVerb() string {
 		return key
 	}
 	return "cut"
+}
+
+func helpHandler(bot tgbot.TgBot, msg tgbot.Message, text string) *string {
+	message := `You can start /learning
+You can see your /statistics
+You can /clear_last_statistics
+You can /nuke_all_statistics
+Have fun!`
+	bot.Answer(msg).Text(message).End()
+	return nil
 }
 
 func startLearningHandler(bot tgbot.TgBot, msg tgbot.Message, text string) *string {
@@ -76,11 +89,23 @@ func statisticsHandler(bot tgbot.TgBot, msg tgbot.Message, text string) *string 
 	}
 	right, wrong, since := getLastStatistics(globalDb, msg.Chat.ID)
 	rightOverall, wrongOverall := getOverallStatistics(globalDb, msg.Chat.ID)
-	format := "Last statistics since %s:\nRight: %d\nWrong: %d\nRatio: %f\nOverall:\nRight: %d\nWrong: %d\nRatio: %f"
+	format := "Last statistics since %s:\nRight: %d\nWrong: %d\nRatio: %f\n\nOverall:\nRight: %d\nWrong: %d\nRatio: %f"
 	ratio := float64(right) / float64(right+wrong)
 	ratioOverall := float64(rightOverall) / float64(rightOverall+wrongOverall)
 	answer := fmt.Sprintf(format, since, right, wrong, ratio, rightOverall, wrongOverall, ratioOverall)
 	bot.Answer(msg).Text(answer).End()
+	return nil
+}
+
+func clearStatisticsHandler(bot tgbot.TgBot, msg tgbot.Message, text string) *string {
+	clearLastStatistics(globalDb, msg.Chat.ID)
+	bot.Answer(msg).Text("Last statistics has been cleared").End()
+	return nil
+}
+
+func nukeStatisticsHandler(bot tgbot.TgBot, msg tgbot.Message, text string) *string {
+	nukeAllStatistics(globalDb, msg.Chat.ID)
+	bot.Answer(msg).Text("All statistics has been cleared").End()
 	return nil
 }
 
