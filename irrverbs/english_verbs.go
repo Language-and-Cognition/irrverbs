@@ -62,7 +62,6 @@ func GetEnglishVerbs() map[string][]string {
 	verbs["grind"] = []string{"ground", "ground"}
 	verbs["grow"] = []string{"grew", "grown"}
 	verbs["hang"] = []string{"hung", "hung"}
-	verbs["hang"] = []string{"hanged", "hanged"}
 	verbs["have"] = []string{"had", "had"}
 	verbs["hear"] = []string{"heard", "heard"}
 	verbs["hide"] = []string{"hid", "hidden"}
